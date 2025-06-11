@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: gunicorn recruitapp.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - ./media:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=recruitapp_db
+      - DB_USER=recruit_user
+      - DB_PASSWORD=pito2415
+      - DB_HOST=db
+      - DB_PORT=3306
+    depends_on:
+      - db
+    networks:
+      - recruitapp-network
+
+  db:
+    image: mysql:8.0
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=recruitapp_db
+      - MYSQL_USER=recruit_user
+      - MYSQL_PASSWORD=pito2415
+      - MYSQL_ROOT_PASSWORD=pito2415
+    ports:
+      - "3307:3306"
+    networks:
+      - recruitapp-network
+
+  nginx:
+    image: nginx:1.25
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./media:/app/media
+    ports:
+      - "8080:80"
+    depends_on:
+      - web
+    networks:
+      - recruitapp-network
+
+volumes:
+  mysql_data:
+
+networks:
+  recruitapp-network:
+    driver: bridge 
